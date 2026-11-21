@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mix Your Aura — Build Your Perfect Sleep Sound</title>
+<meta name="description" content="Blend six live-generated sounds — rain, ocean, wind, fire, brown noise and a stream — into your perfect sleep or focus mix. Save it as a recipe, share it with a link, set a fade-out timer. Free, no signup.">
+<style>
+*{box-sizing:border-box}
+:root{--bg:#0b1020;--card:#151b31;--card2:#1b2340;--text:#eef1ff;--muted:#a7b0d0;--accent:#7dd3a8;--accent2:#7ab8ff;--border:#2a3358}
+html[data-theme="dark"]{color-scheme:dark}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(1200px 600px at 50% -10%,#1d2a52,var(--bg));color:var(--text);min-height:100vh}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 48px}
+header{text-align:center;padding:18px 0 6px}
+h1{font-size:2rem;margin:0 0 6px;letter-spacing:-.02em}
+.sub{color:var(--muted);line-height:1.5;margin:0 auto;max-width:560px}
+.orb-wrap{display:flex;justify-content:center;padding:18px 0 4px}
+#orb{width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#9be7c2,#3f8f6f 45%,#173b4d 80%);box-shadow:0 0 60px rgba(125,211,168,.35);transition:background 1s}
+#orb.playing{animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+#hearing{text-align:center;color:var(--muted);min-height:1.5em;font-style:italic;margin:8px 0 0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-top:16px}
+.playrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+button{cursor:pointer;border:1px solid var(--border);background:var(--card2);color:var(--text);border-radius:999px;padding:11px 18px;font-size:1rem}
+button:hover{border-color:var(--accent)}
+#playBtn{background:var(--accent);color:#08251a;font-weight:700;border:none;min-width:150px}
+.preset-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.preset{font-size:.9rem;padding:8px 13px}
+.channel{display:grid;grid-template-columns:110px 1fr 42px;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--border)}
+.channel:last-child{border-bottom:none}
+.channel label{font-weight:650}
+.channel small{display:block;color:var(--muted);font-weight:400;font-size:.78rem;margin-top:2px}
+.channel output{text-align:right;font-variant-numeric:tabular-nums;color:var(--accent)}
+input[type=range]{width:100%;accent-color:var(--accent);height:28px}
+.timer-row,.share-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center}
+.timer-btn.active,.chip.active{background:var(--accent);color:#08251a;font-weight:700;border-color:transparent}
+#timerStatus{text-align:center;color:var(--accent);min-height:1.4em;margin-top:10px;font-variant-numeric:tabular-nums}
+#recipe{font-family:ui-monospace,Menlo,monospace;background:#0a0e1d;border:1px dashed var(--border);border-radius:10px;padding:12px;text-align:center;word-break:break-all;font-size:.95rem}
+.small{color:var(--muted);font-size:.9rem;line-height:1.55}
+a{color:var(--accent2)}
+.tipjar{text-align:center}
+.door{text-align:center}
+footer{text-align:center;color:var(--muted);font-size:.85rem;margin-top:22px;line-height:1.6}
+@media(max-width:520px){h1{font-size:1.65rem}.channel{grid-template-columns:92px 1fr 36px;gap:8px}#orb{width:120px;height:120px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>🌙 Mix Your Aura</h1>
+<p class="sub">Six sounds, generated live in your browser — no recordings, no loops to spot. Blend them until it sounds like the place you sleep best, then keep the recipe.</p>
+</header>
+
+<div class="orb-wrap"><div id="orb" aria-hidden="true"></div></div>
+<p id="hearing">Silence, for now. Push a slider up and press play.</p>
+
+<section class="card" aria-label="Mixer">
+<div class="playrow">
+<button id="playBtn">▶ Play my mix</button>
+<label class="small">Master <input id="master" type="range" min="0" max="100" value="80" style="width:110px;vertical-align:middle"></label>
+</div>
+<div class="preset-row" role="group" aria-label="Presets">
+<button class="preset" data-preset="sleep">Deep Sleep</button>
+<button class="preset" data-preset="cabin">Rainy Cabin</button>
+<button class="preset" data-preset="ocean">Ocean Night</button>
+<button class="preset" data-preset="focus">Forest Focus</button>
+<button class="preset" data-preset="fire">Fireplace Study</button>
+<button class="preset" data-preset="clear">Clear all</button>
+</div>
+<div id="channels"></div>
+</section>
+
+<section class="card" aria-label="Sleep timer">
+<h2 style="margin:0 0 10px;font-size:1.05rem;text-align:center">Fade-out sleep timer</h2>
+<div class="timer-row" role="group" aria-label="Timer">
+<button class="timer-btn" data-min="15">15 min</button>
+<button class="timer-btn" data-min="30">30 min</button>
+<button class="timer-btn" data-min="45">45 min</button>
+<button class="timer-btn" data-min="60">60 min</button>
+<button class="timer-btn" data-min="0">Off</button>
+</div>
+<p id="timerStatus"></p>
+<p class="small" style="text-align:center;margin:0">In the last 30 seconds the mix fades gently to silence — no sudden cut to wake you back up.</p>
+</section>
+
+<section class="card" aria-label="Your recipe">
+<h2 style="margin:0 0 10px;font-size:1.05rem;text-align:center">Your recipe</h2>
+<p id="recipe">—</p>
+<div class="share-row">
+<button id="copyLinkBtn">Copy share link</button>
+<button id="copyRecipeBtn">Copy recipe</button>
+</div>
+<p class="small" style="text-align:center">The link carries the mix in it. Send it to someone and this page opens already playing their version of your sound — no account, no file.</p>
+</section>
+
+<section class="card door">
+<p style="margin:0 0 6px"><strong>Want the real places, not just the sounds?</strong></p>
+<p class="small" style="margin:0">This mixer is synthesized on the spot. <a href="https://auraflowfocus.com" target="_blank" rel="noopener">AuraFlow</a> holds 350+ full worlds — real rain on real cabins, oceans, forests and fireplaces you can step into and look around, built for sleep, focus and study.</p>
+</section>
+
+<section class="card tipjar">
+<p class="small" style="margin:0">☕ Mix Your Aura is free, no signup, no ads. If it helps you sleep tonight, <a href="https://paypal.me/queston" target="_blank" rel="noopener">a tip for the maker</a> is never expected — and always appreciated.</p>
+</section>
+
+<footer>Built by Queston · Sounds are generated live with the Web Audio API — nothing is streamed or tracked.<br>Headphones help. So does dimming the lights.</footer>
+</div>
+
+<script>
+const CHANNELS=[
+ {id:'rain', name:'Rain', desc:'Steady rain on a roof', color:'#7ab8ff'},
+ {id:'ocean', name:'Ocean', desc:'Slow waves, in and out', color:'#4fd1c5'},
+ {id:'wind', name:'Wind', desc:'Wind through high trees', color:'#c3cbd9'},
+ {id:'fire', name:'Fireplace', desc:'Low fire with real crackle', color:'#ffb26b'},
+ {id:'brown', name:'Brown Noise', desc:'Deep hum that masks the house', color:'#b08968'},
+ {id:'stream', name:'Stream', desc:'A small brook, close by', color:'#7dd3a8'},
+];
+const PRESETS={
+ sleep:{rain:35,ocean:15,wind:0,fire:0,brown:75,stream:0},
+ cabin:{rain:85,ocean:0,wind:35,fire:45,brown:10,stream:0},
+ ocean:{rain:0,ocean:90,wind:10,fire:0,brown:25,stream:0},
+ focus:{rain:20,ocean:0,wind:30,fire:0,brown:0,stream:55},
+ fire:{rain:0,ocean:0,wind:15,fire:80,brown:30,stream:0},
+ clear:{rain:0,ocean:0,wind:0,fire:0,brown:0,stream:0},
+};
+const state={}; CHANNELS.forEach(c=>state[c.id]=0);
+let ctx=null, masterGain=null, nodes={}, playing=false, crackleTimer=null;
+let timerEnd=null, timerInt=null, fadeStarted=false;
+
+const channelsEl=document.getElementById('channels');
+CHANNELS.forEach(c=>{
+  const row=document.createElement('div'); row.className='channel';
+  row.innerHTML=`<label for="s-${c.id}">${c.name}<small>${c.desc}</small></label><input id="s-${c.id}" type="range" min="0" max="100" value="0" aria-label="${c.name} volume"><output id="o-${c.id}">0</output>`;
+  channelsEl.appendChild(row);
+  row.querySelector('input').addEventListener('input',e=>{setChannel(c.id,+e.target.value);});
+});
+
+function makeBuffer(type){
+  const len=ctx.sampleRate*3, buf=ctx.createBuffer(1,len,ctx.sampleRate), d=buf.getChannelData(0);
+  let last=0;
+  for(let i=0;i<len;i++){ const w=Math.random()*2-1;
+    if(type==='brown'){ last=(last+0.02*w)/1.02; d[i]=last*3.2; } else d[i]=w; }
+  return buf;
+}
+function noiseSrc(type){ const s=ctx.createBufferSource(); s.buffer=makeBuffer(type); s.loop=true; return s; }
+function lfo(freq,amt,target){ const o=ctx.createOscillator(), g=ctx.createGain(); o.frequency.value=freq; g.gain.value=amt; o.connect(g); g.connect(target); o.start(); return o; }
+
+function buildNodes(){
+  masterGain=ctx.createGain(); masterGain.gain.value=+document.getElementById('master').value/100*0.9;
+  masterGain.connect(ctx.destination);
+  // Rain: white -> highpass 500 -> lowpass 1600
+  { const src=noiseSrc('white'), hp=ctx.createBiquadFilter(), lp=ctx.createBiquadFilter(), g=ctx.createGain();
+    hp.type='highpass'; hp.frequency.value=500; lp.type='lowpass'; lp.frequency.value=1600; g.gain.value=0;
+    src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(masterGain); src.start(); nodes.rain={gain:g}; }
+  // Ocean: brown -> lowpass 420, LFO swells gain + filter
+  { const src=noiseSrc('brown'), lp=ctx.createBiquadFilter(), g=ctx.createGain();
+    lp.type='lowpass'; lp.frequency.value=420; g.gain.value=0;
+    src.connect(lp); lp.connect(g); g.connect(masterGain); src.start();
+    nodes.ocean={gain:g, base:0}; lfo(0.09,0.35,g.gain); lfo(0.07,140,lp.frequency); }
+  // Wind: white -> bandpass sweeping
+  { const src=noiseSrc('white'), bp=ctx.createBiquadFilter(), g=ctx.createGain();
+    bp.type='bandpass'; bp.frequency.value=480; bp.Q.value=0.7; g.gain.value=0;
+    src.connect(bp); bp.connect(g); g.connect(masterGain); src.start();
+    nodes.wind={gain:g}; lfo(0.06,260,bp.frequency); lfo(0.13,0.12,g.gain); }
+  // Fire: brown low bed (crackle added separately)
+  { const src=noiseSrc('brown'), lp=ctx.createBiquadFilter(), g=ctx.createGain();
+    lp.type='lowpass'; lp.frequency.value=300; g.gain.value=0;
+    src.connect(lp); lp.connect(g); g.connect(masterGain); src.start(); nodes.fire={gain:g}; }
+  // Brown noise: brown -> lowpass 260
+  { const src=noiseSrc('brown'), lp=ctx.createBiquadFilter(), g=ctx.createGain();
+    lp.type='lowpass'; lp.frequency.value=260; g.gain.value=0;
+    src.connect(lp); lp.connect(g); g.connect(masterGain); src.start(); nodes.brown={gain:g}; }
+  // Stream: white -> bandpass 950 with fast flutter
+  { const src=noiseSrc('white'), bp=ctx.createBiquadFilter(), g=ctx.createGain();
+    bp.type='bandpass'; bp.frequency.value=950; bp.Q.value=0.6; g.gain.value=0;
+    src.connect(bp); bp.connect(g); g.connect(masterGain); src.start();
+    nodes.stream={gain:g}; lfo(2.7,0.10,g.gain); lfo(0.21,180,bp.frequency); }
+}
+function crackle(){
+  if(!ctx||!playing) return;
+  const v=state.fire/100; if(v<=0.02) return;
+  const dur=0.02+Math.random()*0.05, len=Math.floor(ctx.sampleRate*dur), buf=ctx.createBuffer(1,len,ctx.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len);
+  const s=ctx.createBufferSource(); s.buffer=buf; const g=ctx.createGain(); g.gain.value=v*(0.12+Math.random()*0.3);
+  const f=ctx.createBiquadFilter(); f.type='highpass'; f.frequency.value=900;
+  s.connect(f); f.connect(g); g.connect(masterGain); s.start();
+}
+function applyGains(){
+  if(!ctx) return; const t=ctx.currentTime;
+  CHANNELS.forEach(c=>{ const n=nodes[c.id]; if(!n) return; let v=state[c.id]/100;
+    let target = c.id==='ocean' ? v*0.55 : c.id==='fire' ? v*0.35 : v*0.5;
+    n.gain.gain.setTargetAtTime(Math.max(target,0.0001), t, 0.4); });
+}
+function setChannel(id,v){ state[id]=v; document.getElementById('s-'+id).value=v; document.getElementById('o-'+id).textContent=v; applyGains(); describe(); updateRecipe(); }
+
+function describe(){
+  const active=CHANNELS.filter(c=>state[c.id]>0).sort((a,b)=>state[b.id]-state[a.id]);
+  const el=document.getElementById('hearing'), orb=document.getElementById('orb');
+  if(!active.length){ el.textContent = playing ? 'Playing silence — a bold choice. Push a slider up.' : 'Silence, for now. Push a slider up and press play.'; orb.style.background='radial-gradient(circle at 35% 35%,#9be7c2,#3f8f6f 45%,#173b4d 80%)'; return; }
+  const words=v=> v>=70?'Heavy':v>=40?'Steady':v>=15?'Soft':'Faint';
+  const parts=active.map(c=>`${words(state[c.id]).toLowerCase()} ${c.name.toLowerCase()}`);
+  el.textContent='You are hearing: '+parts.join(' · ')+'.';
+  orb.style.background=`radial-gradient(circle at 35% 35%, ${active[0].color}, #2a4a63 55%, #101a33 85%)`;
+}
+function recipeString(){ return CHANNELS.map(c=>c.name.split(' ')[0][0]+state[c.id]).join(' · '); }
+function updateRecipe(){
+  document.getElementById('recipe').textContent=recipeString();
+  const hash=CHANNELS.map(c=>state[c.id]).join('-');
+  history.replaceState(null,'','#r='+hash);
+}
+function loadFromHash(){
+  const m=location.hash.match(/#r=([\d-]+)/); if(!m) return false;
+  const vals=m[1].split('-').map(Number); if(vals.length!==6||vals.some(isNaN)) return false;
+  CHANNELS.forEach((c,i)=>{ state[c.id]=Math.min(100,Math.max(0,vals[i])); document.getElementById('s-'+c.id).value=state[c.id]; document.getElementById('o-'+c.id).textContent=state[c.id]; });
+  return true;
+}
+
+const playBtn=document.getElementById('playBtn');
+async function togglePlay(){
+  if(!ctx){ ctx=new (window.AudioContext||window.webkitAudioContext)(); buildNodes(); }
+  if(ctx.state==='suspended') await ctx.resume();
+  playing=!playing;
+  if(playing){ applyGains(); playBtn.textContent='⏸ Pause'; document.getElementById('orb').classList.add('playing');
+    crackleTimer=setInterval(crackle, 260);
+  } else { CHANNELS.forEach(c=>{ if(nodes[c.id]) nodes[c.id].gain.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.2); });
+    playBtn.textContent='▶ Play my mix'; document.getElementById('orb').classList.remove('playing'); clearInterval(crackleTimer); }
+  describe();
+}
+playBtn.addEventListener('click', togglePlay);
+document.getElementById('master').addEventListener('input',e=>{ if(masterGain) masterGain.gain.setTargetAtTime(+e.target.value/100*0.9, ctx.currentTime, 0.1); });
+document.querySelectorAll('.preset').forEach(b=>b.addEventListener('click',()=>{ const p=PRESETS[b.dataset.preset]; CHANNELS.forEach(c=>setChannel(c.id,p[c.id])); }));
+
+// Timer
+const timerStatus=document.getElementById('timerStatus');
+document.querySelectorAll('.timer-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.timer-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  clearInterval(timerInt); fadeStarted=false; const min=+b.dataset.min;
+  if(!min){ timerEnd=null; timerStatus.textContent=''; return; }
+  timerEnd=Date.now()+min*60000;
+  timerInt=setInterval(()=>{
+    const left=timerEnd-Date.now();
+    if(left<=0){ clearInterval(timerInt); timerStatus.textContent='Timer done — sleep well. 🌙'; if(playing) togglePlay(); return; }
+    const s=Math.ceil(left/1000), mm=Math.floor(s/60), ss=String(s%60).padStart(2,'0');
+    timerStatus.textContent=`Fading out in ${mm}:${ss}`;
+    if(left<30000 && ctx && masterGain && !fadeStarted){ fadeStarted=true; masterGain.gain.cancelScheduledValues(ctx.currentTime); masterGain.gain.setValueAtTime(masterGain.gain.value, ctx.currentTime); masterGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime+29); }
+  },500);
+  timerStatus.textContent=`Timer set — ${min} minutes.`;
+}));
+
+document.getElementById('copyLinkBtn').addEventListener('click',async e=>{
+  updateRecipe(); try{ await navigator.clipboard.writeText(location.href); e.target.textContent='Link copied ✓'; }catch{ e.target.textContent=location.href; }
+  setTimeout(()=>e.target.textContent='Copy share link',1800);
+});
+document.getElementById('copyRecipeBtn').addEventListener('click',async e=>{
+  try{ await navigator.clipboard.writeText('My Mix Your Aura recipe: '+recipeString()+' — make yours: '+location.href); e.target.textContent='Recipe copied ✓'; }catch{ e.target.textContent='Copy failed — recipe is above'; }
+  setTimeout(()=>e.target.textContent='Copy recipe',1800);
+});
+
+// Init: shared link wins, otherwise a gentle starter mix (not playing until tapped)
+if(!loadFromHash()){ CHANNELS.forEach(c=>{ const v={rain:45,ocean:0,wind:0,fire:0,brown:35,stream:0}[c.id]; state[c.id]=v; document.getElementById('s-'+c.id).value=v; document.getElementById('o-'+c.id).textContent=v; }); }
+describe(); updateRecipe();
+</script>
+</body>
+</html>
